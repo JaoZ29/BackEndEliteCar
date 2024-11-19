@@ -1,7 +1,7 @@
 import { Request, Response, Router } from "express";
 import {ClienteController} from "./controller/ClienteController";
 import { CarroController } from "./controller/CarroController";
-import {PedidoVendaController} from "./controller/PedidoVendaController";
+import PedidoVendaController from "./controller/PedidoVendaController";
 
 //Cria um roteador
 const router = Router();
