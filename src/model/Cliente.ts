@@ -1,59 +1,48 @@
+import { query } from "express";
 import { DatabaseModel } from "./DatabaseModel";
+import { inspect } from "util";
 
-// Recupera o pool de conexões do banco de dados
 const database = new DatabaseModel().pool;
 
 /**
- * Classe que representa um cliente.
+ * Representa um cliente com identificador único, nome, CPF e telefone.
  */
 export class Cliente {
 
-    /* Atributos */
     /**
-     * Identificador do cliente.
-     * Inicializado com o valor padrão de 0.
+     * Identificador único do cliente.
      */
     private idCliente: number = 0;
-
     /**
      * Nome do cliente.
      */
     private nome: string;
-
     /**
      * CPF do cliente.
      */
     private cpf: string;
-
     /**
      * Telefone do cliente.
      */
     private telefone: string;
 
     /**
-     * Construtor da classe Cliente.
-     * Inicializa os atributos com os valores fornecidos.
+     * Cria uma instância da classe Cliente.
      * 
-     * @param nome Nome do cliente.
-     * @param cpf CPF do cliente.
-     * @param telefone Telefone do cliente.
+     * @param nome - O nome do cliente.
+     * @param cpf - O CPF do cliente.
+     * @param telefone - O telefone do cliente.
      */
-    constructor(
-        nome: string,
-        cpf: string,
-        telefone: string
-    ) {
-        this.nome = nome;         // Atribui o nome fornecido ao atributo nome.
-        this.cpf = cpf;           // Atribui o CPF fornecido ao atributo cpf.
-        this.telefone = telefone; // Atribui o telefone fornecido ao atributo telefone.
+    constructor(nome: string, cpf: string, telefone: string) {
+        this.nome = nome;
+        this.cpf = cpf;
+        this.telefone = telefone;
     }
 
-    /* Métodos get e set */
-
     /**
-     * Retorna o identificador do cliente.
-     * 
-     * @returns {number} O identificador do cliente.
+     * Retorna o identificador único do cliente.
+     *
+     * @returns O identificador único do cliente.
      */
     public getIdCliente(): number {
         return this.idCliente;
@@ -61,17 +50,17 @@ export class Cliente {
 
     /**
      * Define o identificador do cliente.
-     * 
-     * @param idCliente O novo identificador do cliente.
+     *
+     * @param idCliente - O novo identificador do cliente.
      */
     public setIdCliente(idCliente: number): void {
         this.idCliente = idCliente;
     }
 
     /**
-     * Retorna o nome do cliente.
-     * 
-     * @returns {string} O nome do cliente.
+     * Obtém o nome do cliente.
+     *
+     * @returns O nome do cliente.
      */
     public getNome(): string {
         return this.nome;
@@ -80,15 +69,15 @@ export class Cliente {
     /**
      * Define o nome do cliente.
      * 
-     * @param nome O nome do cliente a ser definido.
+     * @param nome - O nome a ser definido para o cliente.
      */
     public setNome(nome: string): void {
         this.nome = nome;
     }
 
     /**
-     * Retorna o CPF do cliente.
-     * 
+     * Obtém o CPF do cliente.
+     *
      * @returns {string} O CPF do cliente.
      */
     public getCpf(): string {
@@ -98,113 +87,181 @@ export class Cliente {
     /**
      * Define o CPF do cliente.
      * 
-     * @param cpf O CPF a ser definido.
+     * @param cpf - O CPF a ser definido para o cliente.
      */
     public setCpf(cpf: string): void {
         this.cpf = cpf;
     }
 
     /**
-     * Retorna o telefone do cliente.
-     * 
-     * @returns {string} O telefone do cliente.
+     * Retorna o número de telefone do cliente.
+     *
+     * @returns {string} O número de telefone do cliente.
      */
     public getTelefone(): string {
         return this.telefone;
     }
 
     /**
-     * Define o telefone do cliente.
-     * 
-     * @param telefone O telefone a ser definido.
+     * Define o número de telefone do cliente.
+     *
+     * @param telefone - O número de telefone a ser definido.
      */
     public setTelefone(telefone: string): void {
         this.telefone = telefone;
     }
 
-    // MÉTODO PARA ACESSAR O BANCO DE DADOS
-    // CRUD Create - Reat - Update - Delete
-    static async listarCliente(): Promise<Array<Cliente> | null> {
-        //CRIANDO LISTA VAZIA PARA ARMAZENAR OS CLIENTES
-        let listaDeClientes: Array<Cliente> = [];
+    /**
+     * Busca e retorna uma lista de clientes do banco de dados.
+     * @returns Um array de objetos do tipo `Cliente` em caso de sucesso ou `null` se ocorrer um erro durante a consulta.
+     * 
+     * - A função realiza uma consulta SQL para obter todos os registros da tabela "cliente".
+     * - Os dados retornados são utilizados para instanciar objetos da classe `Cliente`.
+     * - Cada cliente instanciado é adicionado a uma lista que será retornada ao final da execução.
+     * - Se houver uma falha na consulta ao banco, a função captura o erro, exibe uma mensagem no console e retorna `null`.
+     */
+    static async listagemClientes(): Promise<Array<Cliente> | null> {
+        const listaDeClientes: Array<Cliente> = [];
 
         try {
-            //Query para consulta no banco de dados
             const querySelectCliente = `SELECT * FROM cliente`;
-
-            //executa a query no banco de dados
             const respostaBD = await database.query(querySelectCliente);
 
-            respostaBD.rows.forEach((cliente) => {
-                let novaCliente = new Cliente(
-                    cliente.nome,
-                    cliente.cpf,
-                    cliente.telefone,
-                )
+            respostaBD.rows.forEach((linha) => {
+                const novoCliente = new Cliente(
+                    linha.nome,
+                    linha.cpf,
+                    linha.telefone
+                );
 
-                // adicionando o ID ao objeto
-                novaCliente.setIdCliente(cliente.id);
+                novoCliente.setIdCliente(linha.id_cliente);
 
-                // adiconando o cliente a lista
-                listaDeClientes.push(novaCliente);
+                listaDeClientes.push(novoCliente);
             });
-
-            // retornando a lista de clientes para quem chamou a função
-            return listaDeClientes
-        } catch (error) {
-            console.log(`Erro ao acessar o modelo: ${error}`);
-            return null;
             
-        } 
-        
+            return listaDeClientes;
+        } catch (error) {
+            console.log('Erro ao buscar lista de carros. Consulte os logs para mais detalhes.');
+            console.log(error);
+            return null;
+        }
     }
-    
 
-     /**
-     * Realiza o cadastro de um cliente no banco de dados.
+    /**
+     * Cadastra um novo cliente no banco de dados.
      * 
-     * Esta função recebe um objeto do tipo `cliente` e insere seus dados (Nome,CPF e Telefone)
-     * na tabela `Cliente` do banco de dados. O método retorna um valor booleano indicando se o cadastro 
-     * foi realizado com sucesso.
+     * Esta função recebe um objeto `Cliente`, extrai as informações de nome, CPF e telefone e
+     * realiza uma operação de inserção (INSERT) na tabela `cliente` do banco de dados. Se o 
+     * cadastro for bem-sucedido, a função retorna `true`, caso contrário, retorna `false`.
      * 
-     * @param {Cliente} cliente - Objeto contendo os dados do carro que será cadastrado. O objeto `Carro`
-     *                        deve conter os métodos `getMarca()`, `getModelo()`, `getAno()` e `getCor()`
-     *                        que retornam os respectivos valores do carro.
-     * @returns {Promise<boolean>} - Retorna `true` se o carro foi cadastrado com sucesso e `false` caso contrário.
-     *                               Em caso de erro durante o processo, a função trata o erro e retorna `false`.
+     * @param {Cliente} cliente - Objeto contendo os dados do cliente a ser cadastrado.
      * 
-     * @throws {Error} - Se ocorrer algum erro durante a execução do cadastro, uma mensagem de erro é exibida
-     *                   no console junto com os detalhes do erro.
+     * @returns {Promise<boolean>} - Retorna `true` se o cliente for cadastrado com sucesso, 
+     *                               ou `false` se ocorrer um erro ou falha na inserção.
+     * 
+     * @throws {Error} - Em caso de erro na consulta ao banco de dados, o erro é registrado no log.
      */
-     static async cadastroCliente(cliente: Cliente): Promise<boolean> {
+    static async cadastroCliente(cliente: Cliente): Promise<boolean> {
         try {
-            // query para fazer insert de um carro no banco de dados
-            const queryInsertCliente = `INSERT INTO Cliente (nome, cpf, telefone)
+            const queryInsertCliente = `INSERT INTO cliente (nome, cpf, telefone)
                                         VALUES
-                                        ('${cliente.getNome()}', 
-                                        '${cliente.getCpf()}', 
-                                        '${cliente.getTelefone()}')                                    
-                                        RETURNING id_cliente;`;
+                                        ('${cliente.getNome()}', '${cliente.getCpf()}', '${cliente.getTelefone()}')
+                                        RETURNING id_cliente`;
 
-            // executa a query no banco e armazena a resposta
             const respostaBD = await database.query(queryInsertCliente);
 
-            // verifica se a quantidade de linhas modificadas é diferente de 0
-            if (respostaBD.rowCount != 0) {
-                console.log(`Cliente cadastrado com sucesso! ID do cliente: ${respostaBD.rows[0].id_cliente}`);
-                // true significa que o cadastro foi feito
+            if(respostaBD.rowCount != 0) {
+                console.log(`Cliente cadastrado com sucesso. ID do cliente: ${respostaBD.rows[0].id_cliente}`);
                 return true;
             }
-            // false significa que o cadastro NÃO foi feito.
+
+            return false;
+        } catch (error) {
+            console.log('Erro ao cadastrar o cliente. Consulte os logs para mais detalhes.');
+            console.log(error);
+            return false;
+        }
+    }
+static async removerCarro(idCliente: number): Promise<boolean> {
+        try {
+            // cria uma query para deletar um objeto do banco de dados, passando como parâmetro o id do carro recebido na função
+            const queryDeleteCliente = `DELETE FROM carro WHERE id_cliente = ${idCliente}`;
+        
+            // executar a query e armazenar a resposta do banco de dados
+            const respostaBD = await database.query(queryDeleteCliente);
+
+            // verifica se o número de linhas alteradas é diferente de 0
+            if(respostaBD.rowCount != 0) {
+                // exibe uma mensagem no console
+                console.log(`Cliente removido com sucesso. ID removido: ${idCliente}`);
+                // retorna true, indicando que o carro foi removido
+                return true;
+            }
+
+            // retorna false, o que indica que a remoção não foi feita 
             return false;
 
-            // tratando o erro
+        // trata qualquer erro que possa acontecer no caminho
         } catch (error) {
-            // imprime outra mensagem junto com o erro
-            console.log('Erro ao cadastrar o cliente. Verifique os logs para mais detalhes.');
-            // imprime o erro no console
+            // exibe uma mensagem de falha
+            console.log(`Erro ao remover cliente. Verifique os logs para mais detalhes.`);
+            // imprime o erro no console da API
             console.log(error);
-            // retorno um valor falso
+            // retorna false, o que indica que a remoção não foi feita
+            return false;
+        }
+    }
+    static async removerCliente(idCliente: number): Promise<boolean> {
+        try {
+            //cria uma query para deletar um objeto do banco de dados, passando como parâmetro o ID
+            const queryDeleteCliente = `DELETE FROM cliente WHERE id_cliente = ${idCliente}`;
+
+            //executar a query e armazenar a resposta do banco de daodos
+            const respostaBD = await database.query(queryDeleteCliente);
+
+            //verifica se o número de linhas alteradas é diferente de 0
+            if (respostaBD.rowCount != 0) {
+                //exibe uma mensagem no console
+                console.log(`Carro removido com sucesso. ID removido: ${idCliente}`);
+                //retorna true, indicando que o carro foi removido
+                return true;
+            }
+
+            //retorna false, o que indica que o carro foi removido
+            return true;
+            //trata qualquer erro que possa acontecer no caminho
+        } catch (error) {
+            //exibe uma mensagem de falha
+            console.log(`Erro ao remover cliente. Verifique os logs para mais detalhes.`);
+            //imprime o erro no console da API
+            console.log(error);
+            //retorna false, o que indica que a remoção não foi feita 
+            return false;
+        }
+    }
+
+    static async atualizarCliente(cliente: Cliente): Promise<boolean> {
+        try {
+            const queryUpdateCliente = `
+                UPDATE cliente SET
+                    nome = '${cliente.getNome()}',
+                    cpf = '${cliente.getCpf()}',
+                    telefone = '${cliente.getTelefone()}'
+                WHERE id_cliente = ${cliente.getIdCliente()};
+            `;
+    
+            const respostaBD = await database.query(queryUpdateCliente);
+    
+            if (respostaBD.rowCount !== 0) {
+                console.log(`Cliente atualizado com sucesso! ID do cliente: ${cliente.getIdCliente()}`);
+                return true;
+            } else {
+                console.log(`Cliente não encontrado ou não foi possível atualizar. ID do cliente: ${cliente.getIdCliente()}`);
+                return false;
+            }
+        } catch (error) {
+            console.log("Erro ao atualizar o cliente. Verifique os logs para mais detalhes.");
+            console.log(error);
             return false;
         }
     }

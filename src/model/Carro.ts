@@ -1,3 +1,4 @@
+import { query } from "express";
 import { DatabaseModel } from "./DatabaseModel";
 
 // Recupera o pool de conexões do banco de dados
@@ -162,28 +163,28 @@ export class Carro {
         } catch (error) {
             console.log(`Erro ao acessar o modelo: ${error}`);
             return null;
-            
-        } 
+
+        }
     }
 
 
-     /**
-     * Realiza o cadastro de um carro no banco de dados.
-     * 
-     * Esta função recebe um objeto do tipo `Carro` e insere seus dados (marca, modelo, ano e cor)
-     * na tabela `carro` do banco de dados. O método retorna um valor booleano indicando se o cadastro 
-     * foi realizado com sucesso.
-     * 
-     * @param {Carro} carro - Objeto contendo os dados do carro que será cadastrado. O objeto `Carro`
-     *                        deve conter os métodos `getMarca()`, `getModelo()`, `getAno()` e `getCor()`
-     *                        que retornam os respectivos valores do carro.
-     * @returns {Promise<boolean>} - Retorna `true` se o carro foi cadastrado com sucesso e `false` caso contrário.
-     *                               Em caso de erro durante o processo, a função trata o erro e retorna `false`.
-     * 
-     * @throws {Error} - Se ocorrer algum erro durante a execução do cadastro, uma mensagem de erro é exibida
-     *                   no console junto com os detalhes do erro.
-     */
-     static async cadastroCarro(carro: Carro): Promise<boolean> {
+    /**
+    * Realiza o cadastro de um carro no banco de dados.
+    * 
+    * Esta função recebe um objeto do tipo `Carro` e insere seus dados (marca, modelo, ano e cor)
+    * na tabela `carro` do banco de dados. O método retorna um valor booleano indicando se o cadastro 
+    * foi realizado com sucesso.
+    * 
+    * @param {Carro} carro - Objeto contendo os dados do carro que será cadastrado. O objeto `Carro`
+    *                        deve conter os métodos `getMarca()`, `getModelo()`, `getAno()` e `getCor()`
+    *                        que retornam os respectivos valores do carro.
+    * @returns {Promise<boolean>} - Retorna `true` se o carro foi cadastrado com sucesso e `false` caso contrário.
+    *                               Em caso de erro durante o processo, a função trata o erro e retorna `false`.
+    * 
+    * @throws {Error} - Se ocorrer algum erro durante a execução do cadastro, uma mensagem de erro é exibida
+    *                   no console junto com os detalhes do erro.
+    */
+    static async cadastroCarro(carro: Carro): Promise<boolean> {
         try {
             // query para fazer insert de um carro no banco de dados
             const queryInsertCarro = `INSERT INTO carro (marca, modelo, ano, cor)
@@ -216,4 +217,56 @@ export class Carro {
             return false;
         }
     }
+
+    static async removerCarro(idCarro: number): Promise<Boolean> {
+        try {
+            // query para fazer delete de um carro no banco de dados
+            const queryDeleteCarro = `DELETE FROM carro WHERE id_carro = ${idCarro}`;
+
+            // executa a query no banco e armazena a resposta
+            const respostaBD = await database.query(queryDeleteCarro);
+            //Verifica se o numero de linhas alteradas é diferente de 0
+            if (respostaBD.rowCount != 0) {
+                console.log(`Carro removido com sucesso! ID do carro: ${idCarro}`);
+                //retorna true, indicando que o carro foi removido com sucesso
+                return true;
+            }
+            return false
+
+        } catch (error) {
+            console.log('Erro ao remover o carro. Verifique os logs para mais detalhes.');
+            // imprime o erro no console da API
+            console.log(error);
+            // retorno um valor falso
+            return false;
+        }
+    }
+
+    static async atualizarCarro(carro: Carro): Promise<boolean> {
+        try {
+            //query para atualizar o carro no banco de dados
+            const queryUpdateCarro = `UPDATE carro SET 
+                                       modelo ='${carro.getModelo()}', 
+                                       marca = '${carro.getMarca()}',
+                                       ano = '${carro.getAno()}',
+                                       cor = '${carro.getCor()}',
+                                       WHERE id_carro= ${carro.getIdCarro()};`;
+            //executa a query no banco e armazena a resposta
+            const respostaBD = await database.query(queryUpdateCarro);
+            //Verifica se o numero de linhas alteradas é diferente de 0
+            if (respostaBD.rowCount != 0) {
+                console.log(`Carro atualizado com sucesso! ID do carro: ${carro.getIdCarro}`);
+                //retorna true, indicando que o carro foi atualizado com sucesso
+                return true;
+            }
+            return false
+        } catch (error) {
+            console.log('Erro ao atualizar o carro. Verifique os logs para mais detalhes.');
+            // imprime o erro no console da API
+            console.log(error);
+            // retorno um valor falso
+            return false;
+        }
+    }
+    
 }
